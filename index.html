@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CMS FTE Model — Managed Services Workforce Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fc;--bg2:#ffffff;--bg3:#f1f3f8;--bg4:#e8ecf4;
+  --bd:#dde2ee;--bd2:#c8cedf;--tx:#1a2035;--tx2:#4a5580;--tx3:#8892b0;
+  --ac:#2563eb;--ac2:#3b82f6;--ac3:#eff6ff;--acbd:#bfdbfe;
+  --gn:#16a34a;--gnbg:#f0fdf4;--gnbd:#bbf7d0;
+  --am:#d97706;--ambg:#fffbeb;
+  --rd:#dc2626;--rdbg:#fef2f2;
+  --pu:#7c3aed;--pubg:#f5f3ff;
+  --yl:#ca8a04;--ylbg:#fefce8;
+  --r:8px;--rl:12px;--f:'Inter',sans-serif;--m:'JetBrains Mono',monospace;
+  --sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --sh2:0 4px 16px rgba(0,0,0,.10);
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);font-size:13.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--ac);position:sticky;top:0;z-index:300;box-shadow:0 2px 8px rgba(37,99,235,.35)}
+.logo{display:flex;align-items:center;gap:9px;color:#fff}
+.lm{width:30px;height:30px;background:rgba(255,255,255,.2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.lt{font-size:14px;font-weight:700;letter-spacing:-.3px}.lt span{opacity:.75;font-weight:400}
+.tb-r{display:flex;align-items:center;gap:10px;font-size:11px;color:rgba(255,255,255,.75)}
+.ver{background:rgba(255,255,255,.15);border-radius:20px;padding:2px 9px;font-family:var(--m);font-size:10px}
+
+/* ── LAYOUT ── */
+.shell{display:flex;min-height:calc(100vh - 52px)}
+.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--bd);padding:16px 0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;flex-shrink:0}
+.content{flex:1;padding:24px 32px;max-width:1060px}
+
+/* ── SIDEBAR NAV ── */
+.nsec{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);padding:0 16px;margin-bottom:6px}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;transition:all .12s;color:var(--tx3);font-size:12.5px;border-left:2px solid transparent}
+.ni:hover{background:var(--bg3);color:var(--tx2)}
+.ni.active{background:var(--ac3);color:var(--ac);border-left-color:var(--ac);font-weight:500}
+.ni.done{color:var(--tx2)}
+.ni.done .nn{background:var(--gn);border-color:var(--gn);color:#fff}
+.ni.active .nn{background:var(--ac);border-color:var(--ac);color:#fff}
+.nn{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--m);flex-shrink:0;transition:all .12s}
+.nlbl{flex:1;line-height:1.25}.nsub{font-size:10px;color:var(--tx3);display:block;margin-top:1px}
+.ni.active .nsub{color:var(--ac2)}
+.sdiv{height:1px;background:var(--bd);margin:12px 14px}
+.sbi{padding:0 14px}
+.sbhd{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
+.sbr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:11.5px}
+.sbk{color:var(--tx3)}.sbv{font-family:var(--m);font-size:11px;color:var(--tx2)}.sbv.hi{color:var(--ac);font-weight:600}
+.pb{display:flex;gap:2px;margin:0 14px 4px}.ps{flex:1;height:3px;border-radius:2px;background:var(--bg4);transition:background .3s}
+.ps.done{background:var(--gn)}.ps.active{background:var(--ac)}
+.pl{font-size:9px;font-family:var(--m);color:var(--tx3);margin:0 14px 12px}
+
+/* ── SECTIONS ── */
+.sec{display:none;animation:fu .2s ease}.sec.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.ph{margin-bottom:20px}
+.phs{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ac);font-family:var(--m);margin-bottom:4px}
+.pht{font-size:20px;font-weight:700;letter-spacing:-.3px;color:var(--tx);margin-bottom:4px}
+.phd{font-size:13px;color:var(--tx2);line-height:1.6;max-width:620px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:16px 20px;box-shadow:var(--sh)}
+.card+.card{margin-top:12px}
+.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ct{font-size:12.5px;font-weight:600;color:var(--tx)}.ch{font-size:11px;color:var(--tx3)}
+
+/* ── STAT ROW ── */
+.sr{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.scard{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:14px 16px;box-shadow:var(--sh)}
+.slbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;color:var(--tx3);margin-bottom:4px}
+.sval{font-size:24px;font-weight:700;font-family:var(--m);color:var(--tx);line-height:1}
+.sval.bl{color:var(--ac)}.sval.gn{color:var(--gn)}
+.ssub{font-size:11px;color:var(--tx3);margin-top:2px}
+
+/* ── SCOPE GRID ── */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.scc{background:var(--bg2);border:1.5px solid var(--bd);border-radius:var(--rl);padding:14px;cursor:pointer;transition:all .15s;position:relative;box-shadow:var(--sh)}
+.scc:hover{border-color:var(--ac2);box-shadow:var(--sh2)}
+.scc.on{border-color:var(--ac);background:var(--ac3)}
+.scc.fw{grid-column:1/-1}
+.sc-cb{position:absolute;top:11px;right:11px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--bg)}
+.scc.on .sc-cb{background:var(--ac);border-color:var(--ac)}
+.sc-no{font-size:9px;font-family:var(--m);font-weight:700;color:var(--tx3);margin-bottom:5px}
+.scc.on .sc-no{color:var(--ac)}
+.sc-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.sc-ci{font-size:10.5px;color:var(--tx2);line-height:1.4;margin-bottom:7px}
+.sc-tags{display:flex;flex-wrap:wrap;gap:3px}
+.sc-tag{font-size:9.5px;padding:2px 6px;border-radius:3px;background:var(--bg3);color:var(--tx3);border:1px solid var(--bd)}
+.scc.on .sc-tag{background:var(--acbd);color:var(--ac);border-color:var(--acbd)}
+
+/* ── TECH SECTIONS ── */
+.tsec{margin-bottom:20px}
+.tsh{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding-bottom:8px;border-bottom:2px solid var(--bg4)}
+.tsn{font-size:13px;font-weight:600;color:var(--tx)}.tsc{font-size:10px;font-family:var(--m);color:var(--tx3);margin-left:4px}
+.sab{margin-left:auto;font-size:10.5px;color:var(--ac);cursor:pointer;padding:3px 10px;border:1px solid var(--acbd);border-radius:4px;background:var(--ac3);font-weight:500;transition:all .12s}
+.sab:hover{background:var(--ac);color:#fff}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.ti{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:9px 11px;cursor:pointer;transition:all .12s;display:flex;align-items:flex-start;justify-content:space-between;gap:6px;box-shadow:var(--sh)}
+.ti:hover{border-color:var(--ac2);box-shadow:var(--sh2)}
+.ti.on{border-color:var(--ac);background:var(--ac3)}
+.tn{font-size:11.5px;font-weight:500;color:var(--tx2);line-height:1.3}.ti.on .tn{color:var(--ac);font-weight:600}
+.tu{font-size:9px;color:var(--tx3);margin-top:2px}.ti.on .tu{color:var(--ac2)}
+.tm{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.tf{font-size:9px;font-family:var(--m);color:var(--tx3)}.ti.on .tf{color:var(--ac)}
+.tr{font-size:9px;color:var(--tx3)}.ti.on .tr{color:var(--tx2)}
+.tck{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--bd2);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .12s;background:var(--bg)}
+.ti.on .tck{background:var(--ac);border-color:var(--ac)}
+
+/* ── VOLUMETRICS ── */
+/* Two-column layout: DC vol | DR vol */
+.vol-wrap{margin-bottom:20px}
+.vol-sec-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--bd)}
+.vol-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.vol-sec-name{font-size:12.5px;font-weight:600;color:var(--tx)}
+.vol-sec-cnt{font-size:11px;color:var(--tx3);font-family:var(--m)}
+.vol-table-wrap{overflow-x:auto}
+.vol-table{width:100%;border-collapse:collapse;font-size:12px}
+.vol-table th{background:var(--bg3);padding:7px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)}
+.vol-table th:not(:first-child){text-align:center}
+.vol-table td{padding:6px 10px;border-bottom:1px solid var(--bg4);vertical-align:middle}
+.vol-table td:not(:first-child){text-align:center}
+.vol-table tr:hover td{background:var(--bg3)}
+.vol-table .ti-name{font-weight:500;color:var(--tx)}
+.vol-table .ti-unit{font-size:9.5px;color:var(--tx3)}
+.vol-table .ti-ratio{font-family:var(--m);font-size:10.5px;color:var(--tx3)}
+.vol-table .ti-split{font-size:9.5px;color:var(--tx3)}
+.vol-inp{width:80px;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;font-family:var(--m);font-size:12px;color:var(--tx);background:var(--bg2);text-align:right;transition:border-color .12s}
+.vol-inp:focus{outline:none;border-color:var(--ac);background:var(--ac3)}
+.vol-total{font-family:var(--m);font-size:12px;font-weight:600;color:var(--tx)}
+.vol-fte{font-family:var(--m);font-size:12px;font-weight:700;color:var(--ac)}
+
+/* ── SERVICE WINDOW ── */
+.swg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.swc{background:var(--bg2);border:1.5px solid var(--bd);border-radius:var(--rl);padding:15px;cursor:pointer;transition:all .15s;text-align:center;box-shadow:var(--sh)}
+.swc:hover{border-color:var(--ac2);box-shadow:var(--sh2)}
+.swc.on{border-color:var(--ac);background:var(--ac3)}
+.swi{font-size:22px;margin-bottom:7px}.swn{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:3px}
+.swd{font-size:11.5px;color:var(--tx2);line-height:1.4}
+.swm{font-size:10.5px;font-family:var(--m);color:var(--tx3);margin-top:7px;font-weight:500}
+.swc.on .swm{color:var(--ac)}
+
+/* ── SLA ── */
+.slag{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.slac{background:var(--bg2);border:1.5px solid var(--bd);border-radius:var(--rl);padding:12px;cursor:pointer;transition:all .15s;text-align:center;box-shadow:var(--sh)}
+.slac:hover{border-color:var(--ac2)}.slac.on{border-color:var(--ac);background:var(--ac3)}
+.slan{font-size:15px;font-weight:700;margin-bottom:2px}
+.slar{font-size:9.5px;font-family:var(--m);color:var(--tx3);margin-bottom:7px}
+.slac.on .slar{color:var(--ac)}.slaf{font-size:10.5px;color:var(--tx2);line-height:1.45}
+.slam{font-size:10px;font-family:var(--m);color:var(--tx3);margin-top:5px;font-weight:600}
+.slac.on .slam{color:var(--ac)}
+.bronze .slan{color:#92400e}.silver .slan{color:#374151}.gold .slan{color:#b45309}.platinum .slan{color:#5b21b6}
+
+/* ── TOOLS ── */
+.tgrp{margin-bottom:14px}
+.tgh{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:7px;padding:4px 0;border-bottom:1px solid var(--bd)}
+.tgd{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:5px}
+.tb{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:7px 10px;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:7px;box-shadow:var(--sh)}
+.tb:hover{border-color:var(--ac2)}.tb.on{border-color:var(--ac);background:var(--ac3)}
+.tbi{font-size:15px;flex-shrink:0}
+.tbn{font-size:11px;font-weight:500;color:var(--tx2)}.tb.on .tbn{color:var(--ac);font-weight:600}
+.tbc{font-size:9px;color:var(--tx3)}
+
+/* ── MODEL ── */
+.modg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.modc{background:var(--bg2);border:1.5px solid var(--bd);border-radius:var(--rl);padding:16px;cursor:pointer;transition:all .15s;position:relative;box-shadow:var(--sh)}
+.modc:hover{border-color:var(--ac2);box-shadow:var(--sh2)}.modc.on{border-color:var(--ac);background:var(--ac3)}
+.mrec{position:absolute;top:-1px;right:12px;font-size:9px;background:var(--ac);color:#fff;padding:2px 8px;border-radius:0 0 5px 5px;font-weight:700}
+.mico{font-size:24px;margin-bottom:8px}.mnam{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.mdes{font-size:11.5px;color:var(--tx2);line-height:1.45;margin-bottom:10px}
+.mats{display:flex;flex-direction:column;gap:3px}
+.mat{display:flex;justify-content:space-between;font-size:11px}
+.mak{color:var(--tx3)}.mav{font-family:var(--m);color:var(--tx2)}.modc.on .mav{color:var(--ac);font-weight:600}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fr{margin-bottom:10px}
+.fl{font-size:12px;color:var(--tx2);margin-bottom:5px;display:block}
+.sel-f{width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:7px 10px;color:var(--tx);font-family:var(--f);font-size:12.5px;outline:none;cursor:pointer;transition:border-color .12s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238892b0' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.sel-f:focus{border-color:var(--ac)}.sel-f option{background:var(--bg2)}
+
+/* ── RESULTS ── */
+.rl{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-bottom:16px}
+.rt{width:100%;border-collapse:collapse;font-size:12.5px}
+.rt th{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);padding:7px 10px;text-align:left;border-bottom:2px solid var(--bd);background:var(--bg3)}
+.rt th:not(:first-child){text-align:right}
+.rt td{padding:8px 10px;border-bottom:1px solid var(--bg4);vertical-align:middle}
+.rt td:not(:first-child){text-align:right;font-family:var(--m)}
+.rt tr:last-child td{border-bottom:none}
+.rt .tot td{background:var(--bg3);font-weight:700;font-size:13px}
+.tl{display:flex;align-items:center;gap:8px}
+.tdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bc2{width:70px}.mbar{height:4px;border-radius:2px;background:var(--bg4)}
+.mfil{height:100%;border-radius:2px}
+.cbox{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:14px;box-shadow:var(--sh)}
+.cbt{font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:10px}
+.cw{position:relative;height:220px}.cw2{position:relative;height:200px}
+.cmt{width:100%;border-collapse:collapse;font-size:12px}
+.cmt th{padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);border-bottom:1px solid var(--bd);text-align:center;background:var(--bg3)}
+.cmt th:first-child{text-align:left}
+.cmt td{padding:8px 10px;border-bottom:1px solid var(--bg4);color:var(--tx2);text-align:center}
+.cmt td:first-child{text-align:left;color:var(--tx3)}
+.cmt .hl{font-weight:700;color:var(--tx);font-family:var(--m)}
+.cmt tr:last-child td{border-bottom:none}
+.lt2{width:100%;border-collapse:collapse;font-size:12px}
+.lt2 th{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);padding:7px 10px;border-bottom:2px solid var(--bd);text-align:center;background:var(--bg3)}
+.lt2 th:first-child{text-align:left}
+.lt2 td{padding:7px 10px;border-bottom:1px solid var(--bg4);text-align:center;font-family:var(--m);color:var(--tx2)}
+.lt2 td:first-child{text-align:left;font-family:var(--f);color:var(--tx)}
+.lt2 tr:last-child td{border-bottom:none}
+.lt2 .totr td{background:var(--bg3);font-weight:700;color:var(--tx)}
+.assb{background:var(--bg3);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--r);padding:11px 14px;font-size:11.5px;color:var(--tx2);line-height:1.8;margin-bottom:16px}
+.assb strong{color:var(--tx);font-weight:600}
+.cbr2{margin-bottom:8px}
+.cbh2{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px}
+.cbhk{color:var(--tx2);font-weight:500}.cbhv{font-family:var(--m);color:var(--tx3)}
+.cbtr{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.cbfi{height:100%;border-radius:3px;transition:width .4s ease}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid var(--bd);background:var(--bg2);color:var(--tx2);box-shadow:var(--sh)}
+.chip.on{background:var(--ac3);border-color:var(--acbd);color:var(--ac);font-weight:600}
+
+/* ── BUTTONS ── */
+.br{display:flex;gap:9px;margin-top:22px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:var(--r);font-size:12.5px;font-weight:500;cursor:pointer;font-family:var(--f);transition:all .12s;border:none}
+.bp{background:var(--ac);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.3)}.bp:hover{background:#1d4ed8}
+.bs{background:var(--bg2);color:var(--tx2);border:1px solid var(--bd2)}.bs:hover{background:var(--bg3);color:var(--tx)}
+.bg2{background:transparent;color:var(--tx2);border:1px solid var(--bd)}.bg2:hover{background:var(--bg3)}
+.bgn{background:var(--gnbg);color:var(--gn);border:1px solid var(--gnbd)}.bgn:hover{background:var(--gnbd)}
+
+/* ── NOTIF ── */
+.notif{position:fixed;bottom:20px;right:20px;background:var(--tx);color:#fff;font-size:12.5px;padding:9px 16px;border-radius:var(--r);z-index:999;display:flex;align-items:center;gap:7px;opacity:0;transition:opacity .25s;pointer-events:none}
+.notif.show{opacity:1}
+
+@media(max-width:860px){.sidebar{display:none}.content{padding:16px}.pg,.rl,.sr{grid-template-columns:1fr}.modg,.swg{grid-template-columns:1fr}.slag{grid-template-columns:repeat(2,1fr)}.sg{grid-template-columns:1fr 1fr}}
+@media print{.sidebar,.topbar,.br{display:none!important}.content{padding:12px;max-width:100%}.shell{display:block}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">
+    <div class="lm">📊</div>
+    <div class="lt">CMS FTE Model <span>— Managed Services Workforce Estimator</span></div>
+  </div>
+  <div class="tb-r"><span>Based on CMS-FTE-Model-Draft-Template-v2</span><span class="ver">v3.0</span></div>
+</div>
+
+<div class="shell">
+<div class="sidebar">
+  <div class="pb" id="pb"></div><div class="pl" id="pl">Step 1 of 7</div>
+  <div class="nsec">Estimation Wizard</div>
+  <div class="ni active" id="ni-0" onclick="goStep(0)"><div class="nn" id="nn-0">1</div><div class="nlbl">MS Scope<span class="nsub">21 service categories</span></div></div>
+  <div class="ni" id="ni-1" onclick="goStep(1)"><div class="nn" id="nn-1">2</div><div class="nlbl">Technologies<span class="nsub">Select CI in scope</span></div></div>
+  <div class="ni" id="ni-2" onclick="goStep(2)"><div class="nn" id="nn-2">3</div><div class="nlbl">Volumetrics<span class="nsub">DC + DR unit counts</span></div></div>
+  <div class="ni" id="ni-3" onclick="goStep(3)"><div class="nn" id="nn-3">4</div><div class="nlbl">Service Window<span class="nsub">8×5 / 12×7 / 24×7</span></div></div>
+  <div class="ni" id="ni-4" onclick="goStep(4)"><div class="nn" id="nn-4">5</div><div class="nlbl">SLA & Tools<span class="nsub">Tier + customer tools</span></div></div>
+  <div class="ni" id="ni-5" onclick="goStep(5)"><div class="nn" id="nn-5">6</div><div class="nlbl">Engagement Model<span class="nsub">Dedicated/Shared/Hybrid</span></div></div>
+  <div class="ni" id="ni-6" onclick="goStep(6)"><div class="nn" id="nn-6">7</div><div class="nlbl">FTE Results<span class="nsub">Estimate + L1/L2/L3</span></div></div>
+  <div class="sdiv"></div>
+  <div class="sbi">
+    <div class="sbhd">Live Snapshot</div>
+    <div class="sbr"><span class="sbk">Scope items</span><span class="sbv hi" id="sb-sc">0</span></div>
+    <div class="sbr"><span class="sbk">CI selected</span><span class="sbv" id="sb-ci">0</span></div>
+    <div class="sbr"><span class="sbk">DC Units</span><span class="sbv" id="sb-dc">—</span></div>
+    <div class="sbr"><span class="sbk">DR Units</span><span class="sbv" id="sb-dr">—</span></div>
+    <div class="sbr"><span class="sbk">Coverage</span><span class="sbv" id="sb-sw">—</span></div>
+    <div class="sbr"><span class="sbk">SLA</span><span class="sbv" id="sb-sl">—</span></div>
+    <div class="sbr"><span class="sbk">Model</span><span class="sbv" id="sb-mo">—</span></div>
+    <div class="sbr"><span class="sbk">Est. FTE</span><span class="sbv hi" id="sb-ft">—</span></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══ STEP 0: SCOPE ══ -->
+<div class="sec active" id="sec-0">
+  <div class="ph"><div class="phs">Step 1 of 7 — MS Scope</div><div class="pht">Select MS Service Scope</div><div class="phd">All 21 categories from the CMS FTE Draft Template (S.No 1–21 of the SCOPE sheet). Select all services in scope for this managed services engagement.</div></div>
+  <div class="sg" id="sg"></div>
+  <div class="br"><button class="btn bp" onclick="goStep(1)">Next: Technologies →</button></div>
+</div>
+
+<!-- ══ STEP 1: TECHNOLOGIES ══ -->
+<div class="sec" id="sec-1">
+  <div class="ph"><div class="phs">Step 2 of 7 — Technologies / CI</div><div class="pht">Select Configuration Items in Scope</div><div class="phd">Every CI listed in the Draft Template SCOPE sheet. Ratios are from the DS (Dedicated Sizing) and G3 benchmark sheets. Shows device:FTE ratio and L1:L2:L3 split.</div></div>
+  <div id="tc"></div>
+  <div class="br"><button class="btn bs" onclick="goStep(0)">← Back</button><button class="btn bp" onclick="goStep(2)">Next: Volumetrics →</button></div>
+</div>
+
+<!-- ══ STEP 2: VOLUMETRICS ══ -->
+<div class="sec" id="sec-2">
+  <div class="ph"><div class="phs">Step 3 of 7 — Volumetrics</div><div class="pht">Enter DC & DR Unit Counts</div><div class="phd">Mirrors the CMS FTE Model formula: DC Units + DR Units = Total Instances. Total Instances ÷ FTE Ratio = Base FTE Required.</div></div>
+  <div id="vc"></div>
+  <div class="br"><button class="btn bs" onclick="goStep(1)">← Back</button><button class="btn bp" onclick="goStep(3)">Next: Service Window →</button></div>
+</div>
+
+<!-- ══ STEP 3: SERVICE WINDOW ══ -->
+<div class="sec" id="sec-3">
+  <div class="ph"><div class="phs">Step 4 of 7 — Service Window</div><div class="pht">Service Window & Coverage</div><div class="phd">As per SCOPE sheet column "Service Window 24×7/9×5". The shift multiplier is applied to base FTE to size for round-the-clock operations.</div></div>
+  <div class="swg">
+    <div class="swc" id="sw-8x5" onclick="setSW('8x5')"><div class="swi">🌅</div><div class="swn">9×5</div><div class="swd">Business hours. Monday–Friday. Standard working hours only.</div><div class="swm">Shift multiplier: 1.0×</div></div>
+    <div class="swc on" id="sw-12x7" onclick="setSW('12x7')"><div class="swi">🌗</div><div class="swn">12×7</div><div class="swd">Extended. 12 hours/day, 7 days per week including weekends.</div><div class="swm">Shift multiplier: 1.45×</div></div>
+    <div class="swc" id="sw-24x7" onclick="setSW('24x7')"><div class="swi">🌍</div><div class="swn">24×7</div><div class="swd">Follow-the-sun. Three full shifts, holiday coverage, NOC bridge.</div><div class="swm">Shift multiplier: 2.1×</div></div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ct">Operational Configuration</div></div>
+    <div class="pg">
+      <div>
+        <label class="fl">Primary delivery location</label>
+        <select class="sel-f" id="sw-loc"><option>India (IST UTC+5:30)</option><option>UAE (GST UTC+4)</option><option>UK (GMT/BST)</option><option>Singapore (SGT UTC+8)</option><option>USA East (EST)</option><option>USA West (PST)</option><option>Australia (AEST)</option><option>Multi-location / FTS</option></select>
+        <label class="fl" style="margin-top:8px">Weekend on-call model</label>
+        <select class="sel-f"><option>On-site staffed</option><option>Remote on-call rotation</option><option>Shared pool coverage</option><option>Not required (9×5 only)</option></select>
+      </div>
+      <div>
+        <label class="fl">Holiday coverage</label>
+        <select class="sel-f"><option>Full staffing on public holidays</option><option>Skeleton crew + on-call</option><option>On-call only</option><option>Follow client calendar</option></select>
+        <label class="fl" style="margin-top:8px">P1 escalation model</label>
+        <select class="sel-f"><option>Dedicated on-call engineer</option><option>Pager duty rotation</option><option>NOC bridge escalation</option><option>Vendor-supported escalation</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="br"><button class="btn bs" onclick="goStep(2)">← Back</button><button class="btn bp" onclick="goStep(4)">Next: SLA & Tools →</button></div>
+</div>
+
+<!-- ══ STEP 4: SLA & TOOLS ══ -->
+<div class="sec" id="sec-4">
+  <div class="ph"><div class="phs">Step 5 of 7 — SLA & Tools</div><div class="pht">SLA Tier & Customer Tools</div><div class="phd">Select SLA tier and mark tools already licensed by the customer (from SCOPE sheet's "Customer Management Tool" and "Customer Monitoring Tool" columns).</div></div>
+  <div style="font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:9px">SLA Tier</div>
+  <div class="slag">
+    <div class="slac bronze" id="sla-bronze" onclick="setSLA('bronze')"><div class="slan">Bronze</div><div class="slar">P1: 4hr · P2: 8hr · P3: 24hr</div><div class="slaf">Business hours. Basic monitoring. Monthly reporting.</div><div class="slam">Mult: 0.9×</div></div>
+    <div class="slac silver on" id="sla-silver" onclick="setSLA('silver')"><div class="slan">Silver</div><div class="slar">P1: 2hr · P2: 4hr · P3: 8hr</div><div class="slaf">Extended. Proactive monitoring. Bi-weekly reporting.</div><div class="slam">Mult: 1.0×</div></div>
+    <div class="slac gold" id="sla-gold" onclick="setSLA('gold')"><div class="slan">Gold</div><div class="slar">P1: 1hr · P2: 2hr · P3: 4hr</div><div class="slaf">24×7. Advanced analytics. Weekly + CSAT.</div><div class="slam">Mult: 1.15×</div></div>
+    <div class="slac platinum" id="sla-platinum" onclick="setSLA('platinum')"><div class="slan">Platinum</div><div class="slar">P1: 15min · P2: 1hr · P3: 2hr</div><div class="slaf">Dedicated team. Real-time dashboards. TAM.</div><div class="slam">Mult: 1.35×</div></div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ct">Customer-Provided Tools</div><div class="ch">Tick tools already licensed — reduces tooling overhead FTE</div></div>
+    <div id="tct"></div>
+  </div>
+  <div class="br"><button class="btn bs" onclick="goStep(3)">← Back</button><button class="btn bp" onclick="goStep(5)">Next: Engagement Model →</button></div>
+</div>
+
+<!-- ══ STEP 5: MODEL ══ -->
+<div class="sec" id="sec-5">
+  <div class="ph"><div class="phs">Step 6 of 7 — Engagement Model</div><div class="pht">Engagement Model & Parameters</div><div class="phd">Choose the delivery model. Per the User Guide: Standard 50/30/20, Moderate 40/40/20, Critical 40/30/30 L1/L2/L3 splits — adjust accordingly.</div></div>
+  <div class="modg">
+    <div class="modc on" id="mc-ded" onclick="setMod('dedicated')">
+      <div class="mico">🏢</div><div class="mnam">Dedicated Team</div>
+      <div class="mdes">Named FTEs exclusively for this client. Maximum knowledge, fastest response, highest accountability.</div>
+      <div class="mats"><div class="mat"><span class="mak">FTE multiplier</span><span class="mav">1.00×</span></div><div class="mat"><span class="mak">Cost index</span><span class="mav">Highest</span></div><div class="mat"><span class="mak">Best for</span><span class="mav">Large / complex</span></div></div>
+    </div>
+    <div class="modc" id="mc-sha" onclick="setMod('shared')">
+      <div class="mrec">Cost-efficient</div>
+      <div class="mico">🔄</div><div class="mnam">Shared Team</div>
+      <div class="mdes">Pooled FTEs serve multiple clients with tiered allocation. Best for stable, lower-volume environments.</div>
+      <div class="mats"><div class="mat"><span class="mak">FTE multiplier</span><span class="mav">0.45×</span></div><div class="mat"><span class="mak">Cost index</span><span class="mav">Lowest</span></div><div class="mat"><span class="mak">Best for</span><span class="mav">Stable / small</span></div></div>
+    </div>
+    <div class="modc" id="mc-hyb" onclick="setMod('hybrid')">
+      <div class="mrec">Most popular</div>
+      <div class="mico">⚡</div><div class="mnam">Hybrid</div>
+      <div class="mdes">Core dedicated FTEs for critical services + shared pool for overflow and project work.</div>
+      <div class="mats"><div class="mat"><span class="mak">FTE multiplier</span><span class="mav">0.72×</span></div><div class="mat"><span class="mak">Cost index</span><span class="mav">Medium</span></div><div class="mat"><span class="mak">Best for</span><span class="mav">Most engagements</span></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ct">Complexity & Overhead</div><div class="ch">Per CMS template User Guide methodology</div></div>
+    <div class="pg">
+      <div>
+        <label class="fl">L1/L2/L3 split model</label>
+        <select class="sel-f" id="p-split" onchange="updateSB()">
+          <option value="std">Standard: 50% L1 · 30% L2 · 20% L3</option>
+          <option value="mod">Moderate: 40% L1 · 40% L2 · 20% L3</option>
+          <option value="crit">Critical: 40% L1 · 30% L2 · 30% L3</option>
+        </select>
+        <label class="fl" style="margin-top:8px">Environment complexity</label>
+        <select class="sel-f" id="p-cx" onchange="updateSB()">
+          <option value="0.85">Low — standard, well-documented (0.85×)</option>
+          <option value="1.0" selected>Medium — mixed technologies (1.00×)</option>
+          <option value="1.3">High — legacy + modern, complex (1.30×)</option>
+          <option value="1.6">Very High — customised / regulated (1.60×)</option>
+        </select>
+      </div>
+      <div>
+        <label class="fl">Automation level</label>
+        <select class="sel-f" id="p-au" onchange="updateSB()">
+          <option value="1.0">Low — mostly manual (1.00×)</option>
+          <option value="0.85" selected>Medium — some scripts/tools (0.85×)</option>
+          <option value="0.70">High — significant automation (0.70×)</option>
+          <option value="0.55">Very High — AIOps / full runbook (0.55×)</option>
+        </select>
+        <label class="fl" style="margin-top:8px">Attrition buffer</label>
+        <select class="sel-f" id="p-bu" onchange="updateSB()">
+          <option value="1.10">10% — lean</option>
+          <option value="1.15" selected>15% — standard (recommended)</option>
+          <option value="1.20">20% — conservative</option>
+          <option value="1.25">25% — high-risk / offshore</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="br"><button class="btn bs" onclick="goStep(4)">← Back</button><button class="btn bp" onclick="goStep(6);buildResults()">Calculate FTE Estimate →</button></div>
+</div>
+
+<!-- ══ STEP 6: RESULTS ══ -->
+<div class="sec" id="sec-6">
+  <div class="ph"><div class="phs">Step 7 of 7 — FTE Results</div><div class="pht">FTE Estimate & Summary</div><div class="phd" id="rdesc">Full workforce estimate with L1/L2/L3 breakdown, model comparison, and cost index.</div></div>
+  <div class="sr" id="scards"></div>
+  <div class="chips" id="rchips"></div>
+  <div class="rl">
+    <div class="card"><div class="chd"><div class="ct">FTE by Service Category</div></div><table class="rt" id="rtab"></table></div>
+    <div class="cbox"><div class="cbt">Distribution by Category</div><div class="cw"><canvas id="donut" role="img" aria-label="FTE by category"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="chd"><div class="ct">L1 / L2 / L3 Breakdown</div><div class="ch">Based on DS & G3 benchmark ratios from Draft Template</div></div>
+    <table class="lt2" id="ltab"></table>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+    <div class="card"><div class="chd"><div class="ct">Model Comparison</div></div><table class="cmt" id="cmptab"></table></div>
+    <div class="cbox"><div class="cbt">L1/L2/L3 Stacked by Category</div><div class="cw2"><canvas id="barchart" role="img" aria-label="L1/L2/L3 stacked"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px"><div class="chd"><div class="ct">Cost Index vs Dedicated Baseline</div></div><div id="costbars"></div></div>
+  <div class="assb" id="assbox"></div>
+  <div class="br">
+    <button class="btn bs" onclick="goStep(5)">← Adjust Parameters</button>
+    <button class="btn bgn" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn bg2" onclick="window.print()">🖨 Print</button>
+    <button class="btn bg2" onclick="if(confirm('Reset?'))location.reload()">↺ Restart</button>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /shell -->
+<div class="notif" id="notif">✓ <span id="nmsg"></span></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA — All 21 scope categories + all CIs from Draft Template
+// ═══════════════════════════════════════════════════════════
+
+// SCOPE DEFINITIONS (S.No 1-21 from SCOPE sheet)
+const SCOPES = [
+  {id:'os',     no:'01', name:'Operating System Management',    ci:['Windows','Linux','AIX','Solaris'],                                    color:'#2563eb'},
+  {id:'db',     no:'02', name:'Database Management',            ci:['Oracle','MySQL/PostGre/Maria/Aurora/Mongo/Dynamo','MSSQL'],            color:'#16a34a'},
+  {id:'virt',   no:'03', name:'Virtualisation Management',      ci:['VMware','Citrix Xen','Oracle KVM','Microsoft HyperV','Redhat KVM','AIX LPAR','Kubernetes'], color:'#7c3aed'},
+  {id:'hci',    no:'04', name:'HCI Management',                 ci:['HCI (Nutanix/VxRail/SimpliVity incl. any hypervisor)'],               color:'#d97706', fw:true},
+  {id:'compute',no:'05', name:'Compute Management',             ci:['Rack Server','Blade Server','Blade Chassis'],                         color:'#ea580c'},
+  {id:'net',    no:'06', name:'Network Management',             ci:['DC LAN Switch','Router','DC Router Addons','SDN Controllers (ACI)/Cloud Vision','ACI Leaf','ACI Spine','WIFI Controller','AAA/TACACS','Load Balancer'], color:'#0891b2', fw:true},
+  {id:'mw',     no:'07', name:'Middleware Management',          ci:['JBOSS','Weblogic','Nginx','Tomcat','Apache Web Server','IIS Web Server'], color:'#db2777'},
+  {id:'iapp',   no:'08', name:'Infra Application Management',   ci:['Exchange','O365 Mail','O365 Collab','Google Mail','Google Workspace','Active Directory','ADFS','Public DNS'], color:'#f97316', fw:true},
+  {id:'stor',   no:'09', name:'Storage Management',             ci:['Storage (SAN)','SAN Switch','NAS/DAS Management'],                    color:'#0284c7'},
+  {id:'bkp',    no:'10', name:'Backup Management',              ci:['Backup','Tape Library','Linear Tape Open (LTO)'],                     color:'#65a30d'},
+  {id:'sec',    no:'11', name:'Security Management',            ci:['Firewall - Data Center','UTM - Data Center','VPN Gateway','NIPS','Host IPS Central Server','Host IPS End DC Points','Host IPS End User Device Points','DDoS','Anti-Virus','WAF','PAM','VA','PT','SIEM','Web Proxy','CASB','Encryption Central Server','File, Folder and Disk Encryption','File Integrity Management','MFA','DLP'], color:'#dc2626', fw:true},
+  {id:'dr',     no:'12', name:'DR Management',                  ci:['DRM Tool Management Platform','DC DR Replication Monitoring & Mgmt','DR Drill'], color:'#e11d48'},
+  {id:'wsp',    no:'13', name:'Workspace Management',           ci:['VDI'],                                                                color:'#6d28d9'},
+  {id:'cloud',  no:'14', name:'Cloud Management',               ci:['AWS','Azure','GCP','OCI'],                                            color:'#059669'},
+  {id:'asset',  no:'15', name:'Asset Management',               ci:['Asset Mgmt'],                                                        color:'#ca8a04'},
+  {id:'vendor', no:'16', name:'Vendor Management',              ci:['Vendor Mgmt'],                                                       color:'#64748b'},
+  {id:'sd',     no:'17', name:'Service Desk',                   ci:['Service Desk'],                                                       color:'#3b82f6'},
+  {id:'hd',     no:'18', name:'Help Desk (Catch & Dispatch)',   ci:['Help Desk'],                                                          color:'#60a5fa'},
+  {id:'eus',    no:'19', name:'End User Support',               ci:['Deskside Support'],                                                   color:'#22d3ee'},
+  {id:'tools',  no:'20', name:'Tool Management',                ci:['ITSM Tool Mgmt','Monitoring Tool Mgmt'],                              color:'#a855f7'},
+  {id:'svcm',   no:'21', name:'Service Management',             ci:['Reporting / Process (IPC)'],                                         color:'#34d399'},
+];
+
+// TECHNOLOGY MASTER — all CIs from Draft Template DS+G3 sheets
+// n=name, s=scope_id, u=unit_label, r=devices_per_FTE(ratio), l1/l2/l3 from DS sheet
+const TECH = [
+  // 01 OS
+  {n:'Windows',                          s:'os',     u:'# Servers',          r:150,  l1:.7, l2:.2, l3:.1,  rem:'High endpoint volume; L1 handles basic troubleshooting; L3 complex OS issues'},
+  {n:'Linux (RHEL/OEL/Ubuntu)',          s:'os',     u:'# Servers',          r:150,  l1:.5, l2:.3, l3:.2,  rem:'L1 basic admin; L3 kernel-level and performance tuning'},
+  {n:'AIX',                              s:'os',     u:'# Servers',          r:75,   l1:.3, l2:.4, l3:.3,  rem:'Specialised skills; L3 handles majority of issues'},
+  {n:'Solaris',                          s:'os',     u:'# Servers',          r:20,   l1:.3, l2:.4, l3:.3,  rem:'Legacy systems; L3 handles most issues'},
+  {n:'HP-UX',                            s:'os',     u:'# Servers',          r:75,   l1:.3, l2:.4, l3:.3,  rem:'Legacy HP Unix; specialist L3 skills required'},
+  {n:'Oracle Linux',                     s:'os',     u:'# Servers',          r:200,  l1:.5, l2:.3, l3:.2,  rem:'Similar to RHEL; strong automation support'},
+  {n:'OS Cluster (Linux)',               s:'os',     u:'# Clusters',         r:75,   l1:.3, l2:.4, l3:.3,  rem:'Clustered OS; L3 for failover and complex issues'},
+  // 02 Database
+  {n:'Oracle DB',                        s:'db',     u:'# DB Instances',     r:50,   l1:.2, l2:.4, l3:.4,  rem:'High complexity; L3 for performance tuning and critical DB failures'},
+  {n:'Oracle RAC',                       s:'db',     u:'# RAC Nodes',        r:50,   l1:.2, l2:.4, l3:.4,  rem:'Clustered Oracle; specialist skills'},
+  {n:'MSSQL',                            s:'db',     u:'# DB Instances',     r:50,   l1:.5, l2:.3, l3:.2,  rem:'L1 basic admin; L3 for performance tuning'},
+  {n:'MySQL / MariaDB',                  s:'db',     u:'# DB Instances',     r:50,   l1:.5, l2:.3, l3:.2,  rem:'Open-source; L1 for basic admin; L3 complex queries'},
+  {n:'PostgreSQL',                       s:'db',     u:'# DB Instances',     r:50,   l1:.5, l2:.3, l3:.2,  rem:'Open-source; scalable with automation'},
+  {n:'MongoDB',                          s:'db',     u:'# DB Instances',     r:50,   l1:.5, l2:.3, l3:.2,  rem:'NoSQL; scales well with automation'},
+  {n:'Aurora (AWS)',                     s:'db',     u:'# DB Instances',     r:100,  l1:.5, l2:.3, l3:.2,  rem:'Fully managed; minimal maintenance'},
+  {n:'DynamoDB (AWS)',                   s:'db',     u:'# DB Instances',     r:150,  l1:.6, l2:.3, l3:.1,  rem:'Fully managed; minimal hands-on involvement'},
+  // 03 Virtualisation
+  {n:'VMware vSphere/ESXi (per ESX node)',s:'virt',  u:'# ESX Nodes',        r:75,   l1:.4, l2:.4, l3:.2,  rem:'L1 VM provisioning; L3 hypervisor-level issues'},
+  {n:'Virtual Machine (per VM)',         s:'virt',   u:'# VMs',              r:300,  l1:.5, l2:.35,l3:.15, rem:'VM lifecycle management'},
+  {n:'Citrix Xen / XenServer',          s:'virt',   u:'# Nodes',            r:75,   l1:.4, l2:.4, l3:.2,  rem:'L1 basic user issues; L3 infrastructure-level'},
+  {n:'Oracle KVM',                       s:'virt',   u:'# Nodes',            r:75,   l1:.4, l2:.4, l3:.2,  rem:'Similar to VMware; Oracle specialist skills'},
+  {n:'Microsoft HyperV',                s:'virt',   u:'# Nodes',            r:75,   l1:.4, l2:.4, l3:.2,  rem:'Windows dependency; GUI-heavy management'},
+  {n:'Redhat KVM',                       s:'virt',   u:'# Nodes',            r:75,   l1:.4, l2:.4, l3:.2,  rem:'CLI/Ansible automation support'},
+  {n:'AIX LPAR',                         s:'virt',   u:'# LPARs',            r:50,   l1:.3, l2:.4, l3:.3,  rem:'IBM specialist skills; L3 handles majority'},
+  {n:'Kubernetes',                       s:'virt',   u:'# Clusters',         r:10,   l1:.2, l2:.4, l3:.4,  rem:'L3-heavy for orchestration and scaling'},
+  {n:'OVM — 1 node resource group',     s:'virt',   u:'# Resource Groups',  r:75,   l1:.4, l2:.4, l3:.2,  rem:'Oracle VM; similar to VMware management'},
+  // 04 HCI
+  {n:'HCI — Nutanix',                    s:'hci',    u:'# Nodes',            r:50,   l1:.3, l2:.4, l3:.3,  rem:'L1 monitoring; L3 for infrastructure-level issues'},
+  {n:'HCI — Dell VxRail',               s:'hci',    u:'# Nodes',            r:50,   l1:.3, l2:.4, l3:.3,  rem:'VMware-based HCI; similar to Nutanix'},
+  {n:'HCI — HPE SimpliVity',            s:'hci',    u:'# Nodes',            r:50,   l1:.3, l2:.4, l3:.3,  rem:'HPE HCI; integrated backup'},
+  {n:'HCI — Other',                      s:'hci',    u:'# Nodes',            r:50,   l1:.3, l2:.4, l3:.3,  rem:'Generic HCI management'},
+  // 05 Compute
+  {n:'Rack Server (HP/Dell/IBM)',        s:'compute',u:'# Servers',          r:100,  l1:.6, l2:.3, l3:.1,  rem:'L1 hardware monitoring; L3 critical hardware failures'},
+  {n:'Blade Server',                     s:'compute',u:'# Blade Servers',    r:100,  l1:.6, l2:.3, l3:.1,  rem:'Shared chassis; similar to rack servers'},
+  {n:'Blade Chassis',                    s:'compute',u:'# Chassis',          r:25,   l1:.6, l2:.3, l3:.1,  rem:'L3 for chassis-level and backplane issues'},
+  // 06 Network
+  {n:'DC LAN Switch — Mid-End',          s:'net',    u:'# Switches',         r:120,  l1:.5, l2:.3, l3:.2,  rem:'L1 basic monitoring; L3 complex network issues'},
+  {n:'DC LAN Switch — High-End',         s:'net',    u:'# Switches',         r:90,   l1:.4, l2:.4, l3:.2,  rem:'High-end fabric; L2/L3 for policy issues'},
+  {n:'WAN Edge Router — Low End (≤5 interfaces)', s:'net', u:'# Routers',    r:90,   l1:.5, l2:.3, l3:.2,  rem:'L1 basic config; L3 routing protocol issues'},
+  {n:'WAN Edge Router — High End (>5 interfaces)',s:'net', u:'# Routers',    r:90,   l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for complex routing'},
+  {n:'DC Router Addons',                 s:'net',    u:'# Addons',           r:200,  l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for addon modules'},
+  {n:'SDN Controllers (ACI/Cloud Vision)',s:'net',   u:'# Controllers',      r:5,    l1:.3, l2:.4, l3:.3,  rem:'L3-heavy; SDN architecture expertise'},
+  {n:'ACI Leaf Switches',                s:'net',    u:'# Leaf Switches',    r:15,   l1:.3, l2:.5, l3:.2,  rem:'ACI fabric; L2/L3 for policy issues'},
+  {n:'ACI Spine Switches',               s:'net',    u:'# Spine Switches',   r:10,   l1:.3, l2:.5, l3:.2,  rem:'ACI backbone; L3 for core fabric'},
+  {n:'WIFI Controller',                  s:'net',    u:'# Controllers',      r:10,   l1:.6, l2:.3, l3:.1,  rem:'L1 basic connectivity; L2 for config'},
+  {n:'AAA / TACACS',                     s:'net',    u:'# Systems',          r:10,   l1:.5, l2:.3, l3:.2,  rem:'L1 user access issues; L3 protocol-level'},
+  {n:'Load Balancer (F5/Citrix ADC)',    s:'net',    u:'# Devices',          r:10,   l1:.4, l2:.4, l3:.2,  rem:'L1 basic config; L3 performance and scaling'},
+  // 07 Middleware
+  {n:'JBOSS',                            s:'mw',     u:'# Instances',        r:50,   l1:.5, l2:.3, l3:.2,  rem:'L1 basic app server; L3 performance tuning'},
+  {n:'Weblogic',                         s:'mw',     u:'# Instances',        r:50,   l1:.5, l2:.3, l3:.2,  rem:'L2/L3 for complex config; Oracle license'},
+  {n:'Nginx',                            s:'mw',     u:'# Instances',        r:50,   l1:.5, l2:.3, l3:.2,  rem:'Lightweight; minimal overhead'},
+  {n:'Tomcat',                           s:'mw',     u:'# Instances',        r:50,   l1:.5, l2:.3, l3:.2,  rem:'Java-based; easier than Weblogic'},
+  {n:'Apache Web Server',                s:'mw',     u:'# Servers',          r:50,   l1:.5, l2:.3, l3:.2,  rem:'Stable; widely used; easy automation'},
+  {n:'IIS Web Server',                   s:'mw',     u:'# Servers',          r:50,   l1:.6, l2:.3, l3:.1,  rem:'Windows-dependent; L1 basic; L3 complex config'},
+  // 08 Infra Apps
+  {n:'Exchange Server',                  s:'iapp',   u:'# Mailboxes',        r:4000, l1:.6, l2:.3, l3:.1,  rem:'L1 user issues; L3 backend failures; 1 FTE/500-750 mailboxes'},
+  {n:'O365 Mail',                        s:'iapp',   u:'# Mailboxes',        r:4000, l1:.6, l2:.3, l3:.1,  rem:'L1 user support; L2 config; 1 FTE/750-1000 users'},
+  {n:'O365 Collaboration (Teams/SP)',    s:'iapp',   u:'# Users',            r:2000, l1:.6, l2:.3, l3:.1,  rem:'L1 user support; L2 admin'},
+  {n:'Skype for Business (On-Prem)',     s:'iapp',   u:'# Users',            r:2000, l1:.6, l2:.3, l3:.1,  rem:'Per user up to 50 users per server'},
+  {n:'Google Mail',                      s:'iapp',   u:'# Users',            r:2000, l1:.6, l2:.3, l3:.1,  rem:'Cloud-based; L1 user support; L2 admin'},
+  {n:'Google Workspace',                 s:'iapp',   u:'# Users',            r:2000, l1:.6, l2:.3, l3:.1,  rem:'Low maintenance; cloud-based'},
+  {n:'Active Directory',                 s:'iapp',   u:'# Users',            r:2000, l1:.5, l2:.3, l3:.2,  rem:'L1 user account issues; L3 replication failures'},
+  {n:'ADFS',                             s:'iapp',   u:'# Instances',        r:10,   l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for federation; SSO issues'},
+  {n:'Public DNS',                       s:'iapp',   u:'# Zones',            r:10,   l1:.5, l2:.3, l3:.2,  rem:'L1 basic DNS; L3 zone config and critical failures'},
+  // 09 Storage
+  {n:'Storage (SAN) — per TB',           s:'stor',   u:'# TB',               r:400,  l1:.4, l2:.4, l3:.2,  rem:'L1 basic monitoring; L3 performance and critical storage'},
+  {n:'SAN Switch — per Device (≤48 port)',s:'stor',  u:'# Devices',          r:25,   l1:.4, l2:.4, l3:.2,  rem:'L2/L3 for fabric zoning issues'},
+  {n:'NAS Storage — per TB',             s:'stor',   u:'# TB',               r:500,  l1:.4, l2:.4, l3:.2,  rem:'File storage; L2/L3 for capacity planning'},
+  {n:'DAS Management',                   s:'stor',   u:'# Arrays',           r:20,   l1:.4, l2:.4, l3:.2,  rem:'Direct-attach; hardware monitoring'},
+  // 10 Backup
+  {n:'Backup — per TB (Disk & Tape)',    s:'bkp',    u:'# TB',               r:500,  l1:.5, l2:.3, l3:.2,  rem:'L1 backup monitoring; L3 failures and recovery'},
+  {n:'Tape Library (4 drives/75 slots)', s:'bkp',    u:'# Libraries',        r:50,   l1:.4, l2:.4, l3:.2,  rem:'L2/L3 for tape mgmt; 1 unit per library'},
+  {n:'Linear Tape Open (LTO)',           s:'bkp',    u:'# Units',            r:50,   l1:.4, l2:.4, l3:.2,  rem:'L2/L3 for LTO archival storage'},
+  // 11 Security (full 21 CIs from Draft Template)
+  {n:'Firewall — Data Center (NGFW)',    s:'sec',    u:'# Devices',          r:10,   l1:.4, l2:.4, l3:.2,  rem:'L1 basic config; L3 complex security and policy'},
+  {n:'UTM — Data Center',               s:'sec',    u:'# Devices',          r:10,   l1:.4, l2:.4, l3:.2,  rem:'Unified Threat Mgmt; L2/L3 for config'},
+  {n:'VPN Gateway',                      s:'sec',    u:'# Gateways',         r:10,   l1:.4, l2:.4, l3:.2,  rem:'Once configured minimal maintenance'},
+  {n:'NIPS (Network IPS)',               s:'sec',    u:'# Devices',          r:10,   l1:.4, l2:.4, l3:.2,  rem:'Automated alerting; active monitoring needed'},
+  {n:'Host IPS — Central Server',        s:'sec',    u:'# Servers',          r:10,   l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for IPS central management'},
+  {n:'Host IPS — End DC Points',         s:'sec',    u:'# DC Points',        r:20,   l1:.4, l2:.4, l3:.2,  rem:'L2/L3 for DC endpoint management'},
+  {n:'Host IPS — End User Device Points',s:'sec',    u:'# User Points',      r:200,  l1:.5, l2:.4, l3:.1,  rem:'L1 for user devices; L2/L3 for central mgmt'},
+  {n:'DDoS Protection',                  s:'sec',    u:'# Devices',          r:10,   l1:.3, l2:.5, l3:.2,  rem:'Often cloud-handled; L3 for complex attacks'},
+  {n:'Anti-Virus / EDR',                 s:'sec',    u:'# Endpoints',        r:2500, l1:.5, l2:.4, l3:.1,  rem:'L1 user issues; L2/L3 for central mgmt; 1 FTE/750-1000 endpoints'},
+  {n:'WAF (Web App Firewall)',           s:'sec',    u:'# WAFs',             r:10,   l1:.4, l2:.4, l3:.2,  rem:'L2/L3 for web security rules'},
+  {n:'PAM (CyberArk / BeyondTrust)',    s:'sec',    u:'# PAM Systems',      r:3,    l1:.2, l2:.5, l3:.3,  rem:'L3-heavy for privileged access management'},
+  {n:'VA — Vulnerability Assessment',    s:'sec',    u:'# VA Platforms',     r:3,    l1:.2, l2:.5, l3:.3,  rem:'L3-heavy for vuln assessment'},
+  {n:'PT — Penetration Testing',         s:'sec',    u:'# PT Engagements',   r:3,    l1:.2, l2:.5, l3:.3,  rem:'L3-heavy; specialist pen-test skills'},
+  {n:'SIEM (Splunk/Sentinel/QRadar)',    s:'sec',    u:'# SIEM Devices',     r:1000, l1:.2, l2:.5, l3:.3,  rem:'L3-heavy for analytics; 1 FTE/3-5 SIEM systems'},
+  {n:'Web Proxy / Zscaler',              s:'sec',    u:'# Devices',          r:10,   l1:.5, l2:.3, l3:.2,  rem:'L1 access issues; L3 policy and config'},
+  {n:'CASB',                             s:'sec',    u:'# CASB Systems',     r:5,    l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for cloud security; 1 FTE/5-10 systems'},
+  {n:'Encryption Central Server',        s:'sec',    u:'# Servers',          r:5,    l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for encryption policy'},
+  {n:'File, Folder and Disk Encryption', s:'sec',    u:'# Endpoints',        r:2000, l1:.5, l2:.4, l3:.1,  rem:'L1 user issues; L2/L3 for central policy'},
+  {n:'File Integrity Management',        s:'sec',    u:'# Systems',          r:5,    l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for compliance monitoring'},
+  {n:'MFA (Multi-Factor Auth)',          s:'sec',    u:'# Users',            r:2000, l1:.5, l2:.4, l3:.1,  rem:'L1 user setup; L2/L3 for mgmt'},
+  {n:'DLP (Data Loss Prevention)',       s:'sec',    u:'# Systems',          r:10,   l1:.3, l2:.5, l3:.2,  rem:'L2/L3 for data loss policy'},
+  // 12 DR
+  {n:'DRM Tool Management Platform',     s:'dr',     u:'# DRM Platforms',    r:5,    l1:.3, l2:.4, l3:.3,  rem:'L2/L3 for DRM orchestration'},
+  {n:'DC DR Replication Monitoring & Mgmt',s:'dr',   u:'# Protected Servers',r:150,  l1:.3, l2:.4, l3:.3,  rem:'L1 monitoring; L3 for replication and failover'},
+  {n:'DR Drill',                         s:'dr',     u:'# Drills p.a.',      r:5,    l1:.2, l2:.4, l3:.4,  rem:'L3-heavy; hands-on DR testing'},
+  // 13 Workspace
+  {n:'VDI (Citrix/Horizon)',             s:'wsp',    u:'# Users',            r:500,  l1:.6, l2:.3, l3:.1,  rem:'L1 for users; L2/L3 for infra; 1 FTE/200-250 users'},
+  // 14 Cloud
+  {n:'AWS Managed Operations',           s:'cloud',  u:'# AWS Tenants',      r:10,   l1:.4, l2:.4, l3:.2,  rem:'L3-heavy for cloud architecture; 1 FTE/5-10 tenants'},
+  {n:'Azure Managed Operations',         s:'cloud',  u:'# Azure Tenants',    r:10,   l1:.4, l2:.4, l3:.2,  rem:'L3-heavy; Azure specialist skills'},
+  {n:'GCP Managed Operations',           s:'cloud',  u:'# GCP Tenants',      r:5,    l1:.4, l2:.4, l3:.2,  rem:'L3-heavy for GCP architecture'},
+  {n:'OCI Managed Operations',           s:'cloud',  u:'# OCI Tenants',      r:5,    l1:.4, l2:.4, l3:.2,  rem:'Oracle Cloud; specialist skills'},
+  // 15-16 Asset/Vendor
+  {n:'Asset Management',                 s:'asset',  u:'# Assets',           r:3000, l1:.7, l2:.2, l3:.1,  rem:'L1 tracking; L2 processes; 1 FTE/system'},
+  {n:'Vendor Management',                s:'vendor', u:'# Vendors',          r:3000, l1:.7, l2:.2, l3:.1,  rem:'L1 coordination; L2 contracts; 1 FTE/system'},
+  // 17-19 Service Desk
+  {n:'Service Desk (L1)',                s:'sd',     u:'# Users Supported',  r:250,  l1:.8, l2:.15,l3:.05, rem:'L1-heavy; 1 FTE/250-400 users (HDI standard)'},
+  {n:'Help Desk (Catch & Dispatch)',     s:'hd',     u:'# Users',            r:400,  l1:.8, l2:.15,l3:.05, rem:'L1-heavy; overlaps with Service Desk; 1 FTE/400-600 users'},
+  {n:'Deskside Support',                 s:'eus',    u:'# Users',            r:500,  l1:.8, l2:.15,l3:.05, rem:'L1 onsite; L2 escalations; 1 FTE/500-1000 users'},
+  // 20-21 Tools/Service Mgmt
+  {n:'ITSM Tool Management',             s:'tools',  u:'# Tool Instances',   r:1,    l1:.5, l2:.3, l3:.2,  rem:'ServiceNow/Freshservice; L1 for alerts'},
+  {n:'Monitoring Tool Management',       s:'tools',  u:'# Tool Instances',   r:1,    l1:.5, l2:.3, l3:.2,  rem:'CA/SCOM/Dynatrace; L1 for basic monitoring'},
+  {n:'Reporting / Process (IPC)',        s:'svcm',   u:'# Reports/Processes',r:1,    l1:.5, l2:.4, l3:.1,  rem:'L1 for reports; L2 for process improvement'},
+];
+
+const TOOLS = [
+  {n:'ServiceNow',c:'ITSM',i:'🔧'},{n:'Freshservice',c:'ITSM',i:'🌿'},{n:'Jira SM',c:'ITSM',i:'📋'},
+  {n:'CA (Broadcom) UIM',c:'Monitoring',i:'📡'},{n:'SCOM / System Center',c:'Monitoring',i:'📊'},
+  {n:'Dynatrace',c:'APM/Monitor',i:'📈'},{n:'SolarWinds NPM',c:'Network Monitor',i:'🌐'},
+  {n:'Zabbix',c:'Monitoring',i:'👁️'},{n:'PRTG',c:'Network Monitor',i:'📶'},
+  {n:'Datadog',c:'Cloud Monitor',i:'🐕'},{n:'Grafana / Prometheus',c:'Dashboards',i:'🔥'},
+  {n:'Elastic (ELK)',c:'Log Mgmt',i:'🗃️'},{n:'Splunk',c:'SIEM',i:'🔍'},
+  {n:'Microsoft Sentinel',c:'SIEM',i:'🛡️'},{n:'IBM QRadar',c:'SIEM',i:'🔐'},
+  {n:'CyberArk PAM',c:'PAM',i:'🔑'},{n:'BeyondTrust',c:'PAM',i:'🗝️'},
+  {n:'Qualys VMDR',c:'Vulnerability',i:'🛡️'},{n:'Tenable.io',c:'Vulnerability',i:'🔒'},
+  {n:'PagerDuty',c:'On-call',i:'🚨'},{n:'OpsGenie',c:'On-call',i:'📞'},
+  {n:'Ansible / AWX',c:'Automation',i:'⚙️'},{n:'Terraform',c:'IaC',i:'🏗️'},
+  {n:'Power BI',c:'Reporting',i:'📉'},{n:'ManageEngine',c:'ITOM',i:'🛠️'},
+  {n:'Veeam',c:'Backup',i:'💾'},{n:'Commvault',c:'Backup',i:'🗂️'},
+  {n:'Zerto',c:'DR',i:'🆘'},{n:'VMware vCenter',c:'Virtualisation',i:'📦'},
+  {n:'Nutanix Prism',c:'HCI Mgmt',i:'🧊'},{n:'Ivanti',c:'EUS/ITSM',i:'🔄'},
+];
+
+// ── STATE ──────────────────────────────────────────────────
+const scopeSel = {}; SCOPES.forEach(s => scopeSel[s.id] = true);
+const techSel = {};  TECH.forEach((_,i) => techSel[i] = false);
+const toolSel = {};  TOOLS.forEach((_,i) => toolSel[i] = false);
+
+let swModel = '12x7', slaModel = 'silver', engModel = 'dedicated';
+let donutCh = null, barCh = null;
+
+const SWM  = {'8x5':1.0,'12x7':1.45,'24x7':2.1};
+const SLAM = {bronze:.9, silver:1.0, gold:1.15, platinum:1.35};
+const ENGM = {dedicated:1.0, shared:.45, hybrid:.72};
+
+// ── BUILD PROGRESS BAR ─────────────────────────────────────
+(function(){
+  const pb = document.getElementById('pb');
+  for(let i=0;i<7;i++){const d=document.createElement('div');d.className='ps'+(i===0?' active':'');d.id='ps-'+i;pb.appendChild(d);}
+})();
+
+// ── BUILD SCOPE GRID ───────────────────────────────────────
+function buildSG(){
+  const g = document.getElementById('sg'); g.innerHTML='';
+  SCOPES.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'scc' + (scopeSel[s.id]?' on':'') + (s.fw?' fw':'');
+    d.id = 'sc-'+s.id;
+    d.innerHTML = `
+      <div class="sc-cb" id="scb-${s.id}"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      <div class="sc-no">${s.no}. ${s.name}</div>
+      <div class="sc-ci">${s.ci.slice(0,4).join(' · ')}${s.ci.length>4?' · +more':''}</div>
+      <div class="sc-tags">${s.ci.map(c=>`<span class="sc-tag">${c}</span>`).join('')}</div>`;
+    d.onclick = () => {
+      scopeSel[s.id] = !scopeSel[s.id];
+      d.classList.toggle('on', scopeSel[s.id]);
+      updateSB();
+    };
+    g.appendChild(d);
+  });
+}
+
+// ── BUILD TECH SECTIONS ────────────────────────────────────
+function buildTC(){
+  const c = document.getElementById('tc'); c.innerHTML='';
+  SCOPES.forEach(s => {
+    const items = TECH.map((t,i)=>({t,i})).filter(({t})=>t.s===s.id);
+    if(!items.length) return;
+    const sec = document.createElement('div');
+    sec.className = 'tsec'; sec.id = 'tsec-'+s.id;
+    sec.innerHTML = `<div class="tsh">
+      <div style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
+      <div class="tsn">${s.no}. ${s.name}</div>
+      <span class="tsc" id="tsc-${s.id}">0/${items.length} selected</span>
+      <div class="sab" onclick="selAll('${s.id}')">Select all</div>
+    </div><div class="tg" id="tg-${s.id}"></div>`;
+    c.appendChild(sec);
+    const g = sec.querySelector('#tg-'+s.id);
+    items.forEach(({t,i}) => {
+      const el = document.createElement('div');
+      el.className = 'ti'; el.id = 'ti-'+i;
+      el.innerHTML = `<div><div class="tn">${t.n}</div><div class="tu">${t.u}</div></div>
+        <div class="tm">
+          <div class="tf">1:${t.r}</div>
+          <div class="tr">${Math.round(t.l1*100)}:${Math.round(t.l2*100)}:${Math.round(t.l3*100)}</div>
+        </div>
+        <div class="tck" id="tck-${i}"><svg width="9" height="7" viewBox="0 0 9 7" fill="none" style="opacity:0" id="tcs-${i}"><path d="M1 3.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></div>`;
+      el.onclick = () => toggleTech(i, s.id);
+      g.appendChild(el);
+    });
+  });
+}
+
+function toggleTech(i, sid){
+  techSel[i] = !techSel[i];
+  document.getElementById('ti-'+i).classList.toggle('on', techSel[i]);
+  const s = document.getElementById('tcs-'+i); if(s) s.style.opacity = techSel[i]?'1':'0';
+  updTSC(sid); updateSB();
+}
+
+function selAll(sid){
+  const idx = TECH.map((t,i)=>t.s===sid?i:-1).filter(x=>x>=0);
+  const anyOff = idx.some(i=>!techSel[i]);
+  idx.forEach(i => {
+    techSel[i]=anyOff;
+    document.getElementById('ti-'+i).classList.toggle('on',anyOff);
+    const s=document.getElementById('tcs-'+i); if(s)s.style.opacity=anyOff?'1':'0';
+  });
+  updTSC(sid); updateSB();
+}
+
+function updTSC(sid){
+  const idx = TECH.map((t,i)=>t.s===sid?i:-1).filter(x=>x>=0);
+  const sel = idx.filter(i=>techSel[i]).length;
+  const el = document.getElementById('tsc-'+sid);
+  if(el) el.textContent = sel+'/'+idx.length+' selected';
+}
+
+// ── BUILD VOLUMETRICS TABLE ────────────────────────────────
+function buildVC(){
+  const c = document.getElementById('vc'); c.innerHTML='';
+  SCOPES.forEach(s => {
+    if(!scopeSel[s.id]) return;
+    const items = TECH.map((t,i)=>({t,i})).filter(({t})=>t.s===s.id);
+    if(!items.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'vol-wrap';
+    wrap.innerHTML = `<div class="vol-sec-hd"><div class="vol-dot" style="background:${s.color}"></div><div class="vol-sec-name">${s.no}. ${s.name}</div><div class="vol-sec-cnt" id="vsc-${s.id}"></div></div>
+      <div class="vol-table-wrap"><table class="vol-table">
+        <thead><tr><th>Configuration Item</th><th>Unit</th><th>Ratio (1 FTE:N)</th><th>L1:L2:L3</th><th>DC Units</th><th>DR Units</th><th>Total</th><th>Base FTE</th></tr></thead>
+        <tbody id="vtb-${s.id}"></tbody>
+        <tfoot><tr><td colspan="6" style="padding:7px 10px;font-size:11px;color:var(--tx3)"><strong style="color:var(--tx)">Category Total</strong></td><td class="vol-total" id="vtot-${s.id}">0</td><td class="vol-fte" id="vfte-${s.id}">0.0</td></tr></tfoot>
+      </table></div>`;
+    c.appendChild(wrap);
+    const tbody = wrap.querySelector('#vtb-'+s.id);
+    items.forEach(({t,i}) => {
+      const mx = t.u.includes('TB')?2000: t.u.includes('Users')||t.u.includes('Mailboxes')?20000: t.u.includes('Endpoints')?10000:500;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><div class="ti-name">${t.n}</div></td>
+        <td><div class="ti-unit">${t.u}</div></td>
+        <td><div class="ti-ratio">1 : ${t.r}</div></td>
+        <td><div class="ti-split">${Math.round(t.l1*100)}/${Math.round(t.l2*100)}/${Math.round(t.l3*100)}</div></td>
+        <td><input class="vol-inp" type="number" min="0" max="${mx}" value="0" id="vdc-${i}" oninput="calcRowFTE(${i},'${s.id}')"></td>
+        <td><input class="vol-inp" type="number" min="0" max="${mx}" value="0" id="vdr-${i}" oninput="calcRowFTE(${i},'${s.id}')"></td>
+        <td class="vol-total" id="vtot-r-${i}">0</td>
+        <td class="vol-fte" id="vfte-r-${i}">0.0</td>`;
+      tbody.appendChild(row);
+    });
+  });
+}
+
+function calcRowFTE(i, sid){
+  const dc = parseInt(document.getElementById('vdc-'+i)?.value)||0;
+  const dr = parseInt(document.getElementById('vdr-'+i)?.value)||0;
+  const tot = dc+dr;
+  const fte = tot>0 ? (tot/TECH[i].r) : 0;
+  const rt = document.getElementById('vtot-r-'+i); if(rt) rt.textContent=tot;
+  const rf = document.getElementById('vfte-r-'+i); if(rf) rf.textContent=fte.toFixed(2);
+  // update category total
+  const catItems = TECH.map((t,j)=>({t,j})).filter(({t})=>t.s===sid).map(({j})=>j);
+  let catTot=0, catFTE=0;
+  catItems.forEach(j=>{
+    const d=parseInt(document.getElementById('vdc-'+j)?.value)||0;
+    const r=parseInt(document.getElementById('vdr-'+j)?.value)||0;
+    catTot+=d+r;
+    catFTE+=(d+r)/TECH[j].r;
+  });
+  const et=document.getElementById('vtot-'+sid); if(et) et.textContent=catTot;
+  const ef=document.getElementById('vfte-'+sid); if(ef) ef.textContent=catFTE.toFixed(2);
+  updateSB();
+}
+
+function getDC(i){ return parseInt(document.getElementById('vdc-'+i)?.value)||0; }
+function getDR(i){ return parseInt(document.getElementById('vdr-'+i)?.value)||0; }
+function getTotal(i){ return getDC(i)+getDR(i); }
+
+// ── TOOLS ──────────────────────────────────────────────────
+function buildTools(){
+  const c = document.getElementById('tct');
+  const grps = {}; TOOLS.forEach((t,i)=>{ if(!grps[t.c])grps[t.c]=[]; grps[t.c].push({t,i}); });
+  c.innerHTML = Object.entries(grps).map(([cat,items])=>`
+    <div class="tgrp"><div class="tgh">${cat}</div>
+    <div class="tgd">${items.map(({t,i})=>`
+      <div class="tb" id="tb-${i}" onclick="toggleTool(${i})">
+        <span class="tbi">${t.i}</span><div><div class="tbn">${t.n}</div><div class="tbc">${t.c}</div></div>
+      </div>`).join('')}</div></div>`).join('');
+}
+
+function toggleTool(i){ toolSel[i]=!toolSel[i]; document.getElementById('tb-'+i).classList.toggle('on',toolSel[i]); }
+
+// ── CONTROLS ───────────────────────────────────────────────
+function setSW(sw){ swModel=sw; ['8x5','12x7','24x7'].forEach(x=>document.getElementById('sw-'+x).classList.toggle('on',x===sw)); updateSB(); }
+function setSLA(s){ slaModel=s; ['bronze','silver','gold','platinum'].forEach(x=>document.getElementById('sla-'+x).classList.toggle('on',x===s)); updateSB(); }
+function setMod(m){ engModel=m; ['dedicated','shared','hybrid'].forEach(x=>document.getElementById('mc-'+{dedicated:'ded',shared:'sha',hybrid:'hyb'}[x]).classList.toggle('on',x===m)); updateSB(); }
+
+// ── FTE CALCULATION ────────────────────────────────────────
+function getMultipliers(mo){
+  const cx = parseFloat(document.getElementById('p-cx')?.value||1);
+  const au = parseFloat(document.getElementById('p-au')?.value||.85);
+  const bu = parseFloat(document.getElementById('p-bu')?.value||1.15);
+  return cx * au * bu * SWM[swModel] * SLAM[slaModel] * ENGM[mo||engModel];
+}
+
+// Get L1/L2/L3 ratios based on split model selection
+function getSplitRatios(t){
+  const split = document.getElementById('p-split')?.value||'std';
+  if(split==='mod') return {l1:.4,l2:.4,l3:.2}; // Moderate
+  if(split==='crit') return {l1:.4,l2:.3,l3:.3}; // Critical
+  return {l1:t.l1, l2:t.l2, l3:t.l3}; // Standard — use tech-specific ratios from DS sheet
+}
+
+function calcByScope(mo){
+  const m = getMultipliers(mo);
+  const res = {};
+  SCOPES.forEach(s => { if(scopeSel[s.id]) res[s.id]={name:s.name,color:s.color,base:0,adj:0,l1:0,l2:0,l3:0}; });
+  TECH.forEach((t,i) => {
+    if(!scopeSel[t.s]) return;
+    const vol = getTotal(i); if(!vol) return;
+    const base = vol/t.r;
+    const adj  = base * m;
+    const sr   = getSplitRatios(t);
+    if(!res[t.s]) res[t.s]={name:SCOPES.find(s=>s.id===t.s)?.name||t.s,color:SCOPES.find(s=>s.id===t.s)?.color||'#888',base:0,adj:0,l1:0,l2:0,l3:0};
+    res[t.s].base += base;
+    res[t.s].adj  += adj;
+    res[t.s].l1   += adj * sr.l1;
+    res[t.s].l2   += adj * sr.l2;
+    res[t.s].l3   += adj * sr.l3;
+  });
+  return res;
+}
+
+// ── SIDEBAR UPDATE ─────────────────────────────────────────
+function updateSB(){
+  const sc = Object.values(scopeSel).filter(Boolean).length;
+  const ci = Object.values(techSel).filter(Boolean).length;
+  document.getElementById('sb-sc').textContent = sc;
+  document.getElementById('sb-ci').textContent = ci;
+  // DC/DR totals
+  let dcTot=0,drTot=0;
+  TECH.forEach((_,i)=>{ dcTot+=getDC(i); drTot+=getDR(i); });
+  document.getElementById('sb-dc').textContent = dcTot>0 ? dcTot.toLocaleString() : '—';
+  document.getElementById('sb-dr').textContent = drTot>0 ? drTot.toLocaleString() : '—';
+  document.getElementById('sb-sw').textContent  = swModel;
+  document.getElementById('sb-sl').textContent  = slaModel.charAt(0).toUpperCase()+slaModel.slice(1);
+  document.getElementById('sb-mo').textContent  = {dedicated:'Dedicated',shared:'Shared',hybrid:'Hybrid'}[engModel];
+  const res = calcByScope('dedicated');
+  const tot = Math.ceil(Object.values(res).reduce((a,b)=>a+b.adj,0));
+  document.getElementById('sb-ft').textContent = tot>0 ? tot+' FTE' : '—';
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────
+let curStep = 0;
+function goStep(n){
+  document.getElementById('sec-'+curStep).classList.remove('active');
+  document.getElementById('ni-'+curStep).classList.remove('active');
+  curStep=n;
+  document.getElementById('sec-'+n).classList.add('active');
+  document.getElementById('ni-'+n).classList.add('active');
+  for(let i=0;i<7;i++){
+    const ni=document.getElementById('ni-'+i), ps=document.getElementById('ps-'+i), nn=document.getElementById('nn-'+i);
+    if(i<n){
+      ni.classList.add('done');
+      if(ps){ps.classList.remove('active');ps.classList.add('done');}
+      if(nn)nn.innerHTML=`<svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+    } else if(i===n){
+      ni.classList.remove('done');
+      if(ps){ps.classList.add('active');ps.classList.remove('done');}
+      if(nn)nn.textContent=i+1;
+    } else {
+      ni.classList.remove('done');
+      if(ps){ps.classList.remove('active','done');}
+      if(nn)nn.textContent=i+1;
+    }
+  }
+  document.getElementById('pl').textContent='Step '+(n+1)+' of 7';
+  if(n===2) buildVC();
+  window.scrollTo(0,0);
+  updateSB();
+}
+
+// ── BUILD RESULTS ──────────────────────────────────────────
+function buildResults(){
+  const res   = calcByScope();
+  const towers= Object.entries(res).filter(([,v])=>v.adj>.005);
+  const total = towers.reduce((a,[,v])=>a+v.adj,0);
+  const ml    = {dedicated:'Dedicated',shared:'Shared',hybrid:'Hybrid'};
+
+  // stat cards
+  document.getElementById('scards').innerHTML=[
+    {l:'Total FTE (Adjusted)',v:Math.ceil(total),s:'All categories · '+ml[engModel],cl:'bl'},
+    {l:'Engagement Model',    v:ml[engModel],    s:(ENGM[engModel]*100).toFixed(0)+'% of dedicated'},
+    {l:'Shift Coverage',      v:swModel,         s:(SWM[swModel]*100).toFixed(0)+'× shift multiplier'},
+    {l:'SLA Tier',            v:slaModel.charAt(0).toUpperCase()+slaModel.slice(1), s:(SLAM[slaModel]*100).toFixed(0)+'× SLA multiplier'},
+  ].map(s=>`<div class="scard"><div class="slbl">${s.l}</div><div class="sval ${s.cl||''}">${s.v}</div><div class="ssub">${s.s}</div></div>`).join('');
+
+  // chips
+  document.getElementById('rchips').innerHTML = towers.map(([k,v])=>
+    `<div class="chip on"><span style="width:7px;height:7px;border-radius:50%;background:${v.color};display:inline-block"></span>${v.name}: ${Math.ceil(v.adj)} FTE</div>`
+  ).join('');
+
+  // FTE table
+  let rows='';
+  towers.forEach(([k,v])=>{
+    const pct = total>0?Math.round(v.adj/total*100):0;
+    rows+=`<tr>
+      <td><div class="tl"><div class="tdot" style="background:${v.color}"></div>${v.name}</div></td>
+      <td>${v.base.toFixed(2)}</td>
+      <td>${Math.ceil(v.adj)}</td>
+      <td>${pct}%</td>
+      <td class="bc2"><div class="mbar"><div class="mfil" style="width:${pct}%;background:${v.color}"></div></div></td>
+    </tr>`;
+  });
+  document.getElementById('rtab').innerHTML=`
+    <thead><tr><th>Service Category</th><th>Base FTE</th><th>Adj. FTE</th><th>Share</th><th style="min-width:65px">Bar</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr class="tot"><td>TOTAL</td><td>—</td><td>${Math.ceil(total)}</td><td>100%</td><td></td></tr></tfoot>`;
+
+  // L1/L2/L3 table
+  let lr=''; let tl1=0,tl2=0,tl3=0;
+  towers.forEach(([k,v])=>{tl1+=v.l1;tl2+=v.l2;tl3+=v.l3; lr+=`<tr><td>${v.name}</td><td>${Math.ceil(v.l1)}</td><td>${Math.ceil(v.l2)}</td><td>${Math.ceil(v.l3)}</td><td>${Math.ceil(v.adj)}</td></tr>`;});
+  document.getElementById('ltab').innerHTML=`
+    <thead><tr><th>Category</th><th>L1 FTE</th><th>L2 FTE</th><th>L3 FTE</th><th>Total</th></tr></thead>
+    <tbody>${lr}</tbody>
+    <tfoot><tr class="totr"><td>TOTAL</td><td>${Math.ceil(tl1)}</td><td>${Math.ceil(tl2)}</td><td>${Math.ceil(tl3)}</td><td>${Math.ceil(total)}</td></tr></tfoot>`;
+
+  // donut chart
+  if(donutCh){donutCh.destroy();donutCh=null;}
+  donutCh=new Chart(document.getElementById('donut'),{
+    type:'doughnut',
+    data:{labels:towers.map(([,v])=>v.name),datasets:[{data:towers.map(([,v])=>Math.ceil(v.adj)),backgroundColor:towers.map(([,v])=>v.color),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw} FTE`}}}}
+  });
+
+  // stacked bar L1/L2/L3
+  if(barCh){barCh.destroy();barCh=null;}
+  barCh=new Chart(document.getElementById('barchart'),{
+    type:'bar',
+    data:{
+      labels:towers.map(([,v])=>v.name.length>14?v.name.slice(0,13)+'…':v.name),
+      datasets:[
+        {label:'L1',data:towers.map(([,v])=>Math.ceil(v.l1)),backgroundColor:'#bfdbfe',borderRadius:3},
+        {label:'L2',data:towers.map(([,v])=>Math.ceil(v.l2)),backgroundColor:'#3b82f6',borderRadius:3},
+        {label:'L3/SME',data:towers.map(([,v])=>Math.ceil(v.l3)),backgroundColor:'#1e40af',borderRadius:3},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,ticks:{color:'#8892b0',font:{size:9}},grid:{display:false}},y:{stacked:true,ticks:{color:'#8892b0',font:{size:9}},grid:{color:'rgba(0,0,0,.05)'}}},plugins:{legend:{labels:{color:'#4a5580',boxWidth:11,font:{size:11}}}}}
+  });
+
+  // compare table
+  const ded=calcByScope('dedicated'), sha=calcByScope('shared'), hyb=calcByScope('hybrid');
+  const tD=Math.ceil(Object.values(ded).reduce((a,b)=>a+b.adj,0));
+  const tS=Math.ceil(Object.values(sha).reduce((a,b)=>a+b.adj,0));
+  const tH=Math.ceil(Object.values(hyb).reduce((a,b)=>a+b.adj,0));
+  document.getElementById('cmptab').innerHTML=`
+    <thead><tr><th>Attribute</th><th ${engModel==='dedicated'?'style="color:var(--ac)"':''}>Dedicated</th><th ${engModel==='shared'?'style="color:var(--ac)"':''}>Shared</th><th ${engModel==='hybrid'?'style="color:var(--ac)"':''}>Hybrid</th></tr></thead>
+    <tbody>
+      <tr><td>Total FTE</td><td class="${engModel==='dedicated'?'hl':''}">${tD}</td><td class="${engModel==='shared'?'hl':''}">${tS}</td><td class="${engModel==='hybrid'?'hl':''}">${tH}</td></tr>
+      <tr><td>Cost index</td><td>1.00×</td><td>~0.45×</td><td>~0.72×</td></tr>
+      <tr><td>P1 response</td><td>Fastest</td><td>Moderate</td><td>Fast (core)</td></tr>
+      <tr><td>IP retention</td><td>High</td><td>Low</td><td>Medium</td></tr>
+      <tr><td>Scalability</td><td>Low</td><td>High</td><td>Medium-High</td></tr>
+    </tbody>`;
+
+  // cost bars
+  document.getElementById('costbars').innerHTML=[['Dedicated',tD,'#2563eb'],['Shared',tS,'#16a34a'],['Hybrid',tH,'#d97706']].map(([l,v,c])=>{
+    const pct=tD>0?Math.round(v/tD*100):0;
+    return `<div class="cbr2"><div class="cbh2"><span class="cbhk">${l}</span><span class="cbhv">${pct}% of dedicated · ${v} FTE</span></div><div class="cbtr"><div class="cbfi" style="width:${pct}%;background:${c}"></div></div></div>`;
+  }).join('');
+
+  const m={cx:parseFloat(document.getElementById('p-cx')?.value||1),au:parseFloat(document.getElementById('p-au')?.value||.85),bu:parseFloat(document.getElementById('p-bu')?.value||1.15)};
+  const split=document.getElementById('p-split')?.value||'std';
+  const splitLbl={std:'Standard 50/30/20',mod:'Moderate 40/40/20',crit:'Critical 40/30/30'}[split];
+  document.getElementById('assbox').innerHTML=`<strong>Configuration:</strong> ${towers.length} categories in scope &nbsp;|&nbsp; Shift: <strong>${swModel}</strong> (${(SWM[swModel]*100).toFixed(0)}×) &nbsp;|&nbsp; SLA: <strong>${slaModel.charAt(0).toUpperCase()+slaModel.slice(1)}</strong> (${(SLAM[slaModel]*100).toFixed(0)}×) &nbsp;|&nbsp; Model: <strong>${ml[engModel]}</strong> (${(ENGM[engModel]*100).toFixed(0)}×) &nbsp;|&nbsp; L1/L2/L3 Split: <strong>${splitLbl}</strong> &nbsp;|&nbsp; Complexity: <strong>${(m.cx*100).toFixed(0)}%</strong> &nbsp;|&nbsp; Automation: <strong>${(m.au*100).toFixed(0)}%</strong> &nbsp;|&nbsp; Attrition buffer: <strong>+${((m.bu-1)*100).toFixed(0)}%</strong>`;
+  document.getElementById('rdesc').textContent=`${Math.ceil(total)} FTE · ${towers.length} categories · ${ml[engModel]} · ${swModel} · ${slaModel.charAt(0).toUpperCase()+slaModel.slice(1)} SLA`;
+  updateSB();
+}
+
+// ── CSV EXPORT ─────────────────────────────────────────────
+function exportCSV(){
+  const res=calcByScope(), towers=Object.entries(res).filter(([,v])=>v.adj>.005);
+  const total=towers.reduce((a,[,v])=>a+v.adj,0);
+  const ml={dedicated:'Dedicated',shared:'Shared',hybrid:'Hybrid'};
+  let csv='CMS FTE Model Export\n';
+  csv+=`Generated,${new Date().toLocaleDateString()}\nModel,${ml[engModel]}\nShift,${swModel}\nSLA,${slaModel}\n\n`;
+  csv+='Category,Base FTE,L1 FTE,L2 FTE,L3 FTE,Total Adj. FTE,Share%\n';
+  towers.forEach(([k,v])=>{const pct=total>0?Math.round(v.adj/total*100):0; csv+=`"${v.name}",${v.base.toFixed(2)},${Math.ceil(v.l1)},${Math.ceil(v.l2)},${Math.ceil(v.l3)},${Math.ceil(v.adj)},${pct}%\n`;});
+  csv+=`\nTOTAL,,,,,${Math.ceil(total)},100%\n\nCI Detail\nCI,Category,Unit,DC Units,DR Units,Total,FTE Ratio,Base FTE,L1:L2:L3\n`;
+  TECH.forEach((t,i)=>{
+    const dc=getDC(i), dr=getDR(i), tot=dc+dr; if(!tot||!scopeSel[t.s]) return;
+    csv+=`"${t.n}","${SCOPES.find(s=>s.id===t.s)?.name}",${t.u},${dc},${dr},${tot},1:${t.r},${(tot/t.r).toFixed(2)},${Math.round(t.l1*100)}:${Math.round(t.l2*100)}:${Math.round(t.l3*100)}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='CMS_FTE_Estimate.csv'; a.click(); URL.revokeObjectURL(url);
+  showN('Exported: CMS_FTE_Estimate.csv');
+}
+
+function showN(msg){ document.getElementById('nmsg').textContent=msg; const el=document.getElementById('notif'); el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2600); }
+
+// ── INIT ───────────────────────────────────────────────────
+buildSG(); buildTC(); buildTools(); updateSB();
+</script>
+</body>
+</html>
